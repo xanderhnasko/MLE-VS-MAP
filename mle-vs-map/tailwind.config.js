@@ -11,7 +11,13 @@ module.exports = {
         'posterior': '#8B5CF6',
         'mle-point': '#F59E0B',
         'map-point': '#10B981',
-      }
+        border: "var(--border)",
+        background: "var(--background)",
+        foreground: "var(--foreground)",
+        muted: {
+          foreground: "var(--muted-foreground)",
+        },
+      },
     },
   },
   plugins: [],

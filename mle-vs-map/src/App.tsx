@@ -1,106 +1,51 @@
-import React, { useState, useEffect } from 'react';
-import './App.css';
-import DataInput from './components/DataInput';
-import MLESection from './components/MLESection';
-import MAPSection from './components/MAPSection';
-import { AppState } from './types';
-import { 
-  calculateMLE, 
-  calculateMAP, 
-  generateLikelihoodData, 
-  generatePriorData, 
-  generatePosteriorData,
-  normalizeData 
-} from './utils/calculations';
+import React, { useState } from 'react';
+import { InputControls } from './components/InputControls';
+import { LikelihoodChart } from './components/LikelihoodChart';
+import { PriorPosteriorChart } from './components/PriorPosteriorChart';
+import { CoinData, BetaParams } from './components/math-utils';
 
-function App() {
-  const [state, setState] = useState<AppState>({
-    heads: 10,
-    tails: 2,
-    alpha: 2,
-    beta: 2,
-    mleEstimate: 0,
-    mapEstimate: 0,
-    likelihoodData: [],
-    priorData: [],
-    posteriorData: []
-  });
-
-  // Update computed values when data or prior parameters change
-  useEffect(() => {
-    const { heads, tails, alpha, beta } = state;
-    
-    // Calculate estimates
-    const mleEstimate = calculateMLE(heads, tails);
-    const mapEstimate = calculateMAP(heads, tails, alpha, beta);
-    
-    // Generate distribution data
-    const likelihoodData = normalizeData(generateLikelihoodData(heads, tails));
-    const priorData = normalizeData(generatePriorData(alpha, beta));
-    const posteriorData = normalizeData(generatePosteriorData(heads, tails, alpha, beta));
-    
-    setState(prev => ({
-      ...prev,
-      mleEstimate,
-      mapEstimate,
-      likelihoodData,
-      priorData,
-      posteriorData
-    }));
-  }, [state.heads, state.tails, state.alpha, state.beta]);
-
-  const updateData = (heads: number, tails: number) => {
-    setState(prev => ({ ...prev, heads, tails }));
-  };
-
-  const updatePrior = (alpha: number, beta: number) => {
-    setState(prev => ({ ...prev, alpha, beta }));
-  };
+export default function App() {
+  const [coinData, setCoinData] = useState<CoinData>({ heads: 7, tails: 3 });
+  const [priorParams, setPriorParams] = useState<BetaParams>({ alpha: 2, beta: 2 });
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <header className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            MLE vs MAP: Coin Flip Estimation
-          </h1>
-          <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-            Interactive demonstration of Maximum Likelihood Estimation (MLE) vs Maximum A Posteriori (MAP) 
-            estimation using coin flip examples. See how prior knowledge influences parameter estimation.
+    <div className="min-h-screen bg-background">
+      {/* Main header */}
+      <div className="container mx-auto px-4 py-8 max-w-7xl">
+        <div className="mb-8 text-center">
+          <h1 className="text-4xl mb-4">MLE vs MAP: Coin Flip Demo</h1>
+          <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
+            Explore how Maximum Likelihood Estimation (MLE) and Maximum A Posteriori (MAP) estimation 
+            differ when analyzing coin flip data. See how prior beliefs influence your final estimate.
           </p>
-        </header>
+        </div>
+      </div>
 
-        {/* Data Input Section */}
-        <DataInput 
-          heads={state.heads}
-          tails={state.tails}
-          onDataChange={updateData}
-        />
+      {/* Sticky input controls */}
+      <div className="sticky top-0 z-50 bg-background border-b border-border shadow-sm">
+        <div className="container mx-auto px-4 max-w-7xl">
+          <InputControls
+            coinData={coinData}
+            onCoinDataChange={setCoinData}
+            priorParams={priorParams}
+            onPriorParamsChange={setPriorParams}
+          />
+        </div>
+      </div>
 
-        {/* MLE Section */}
-        <MLESection 
-          heads={state.heads}
-          tails={state.tails}
-          mleEstimate={state.mleEstimate}
-          likelihoodData={state.likelihoodData}
-        />
+      {/* Main content */}
+      <div className="container mx-auto px-4 py-8 max-w-7xl">
+        <div className="space-y-8">
+          {/* Likelihood Chart */}
+          <LikelihoodChart coinData={coinData} />
 
-        {/* MAP Section */}
-        <MAPSection 
-          heads={state.heads}
-          tails={state.tails}
-          alpha={state.alpha}
-          beta={state.beta}
-          mapEstimate={state.mapEstimate}
-          priorData={state.priorData}
-          likelihoodData={state.likelihoodData}
-          posteriorData={state.posteriorData}
-          onPriorChange={updatePrior}
-        />
+          {/* Prior/Posterior Chart */}
+          <PriorPosteriorChart 
+            coinData={coinData} 
+            priorParams={priorParams}
+          />
+        </div>
       </div>
     </div>
   );
 }
-
-export default App;
