@@ -13,7 +13,7 @@ export default function App() {
       {/* Main header */}
       <div className="container mx-auto px-4 py-8 max-w-7xl">
         <div className="mb-8 text-center">
-          <h1 className="text-4xl mb-4">MLE vs MAP: Coin Flip Demo</h1>
+          <h1 className="text-4xl mb-4">MLE vs MAP tug-of-war</h1>
           <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
             Explore how Maximum Likelihood Estimation (MLE) and Maximum A Posteriori (MAP) estimation 
             differ when analyzing coin flip data. See how prior beliefs influence your final estimate.

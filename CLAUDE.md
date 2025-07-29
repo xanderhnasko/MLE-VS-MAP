@@ -3,7 +3,7 @@
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Project Overview
-Interactive educational React webapp demonstrating Maximum Likelihood Estimation (MLE) vs Maximum A Posteriori (MAP) estimation using coin flip examples with "tug of war" visualization metaphor.
+Interactive educational React webapp demonstrating Maximum Likelihood Estimation (MLE) vs Maximum A Posteriori (MAP) estimation using coin flip examples with statistical visualizations.
 
 ## Development Commands
 
@@ -12,68 +12,62 @@ Interactive educational React webapp demonstrating Maximum Likelihood Estimation
 cd mle-vs-map
 npm start
 ```
-Runs the development server at http://localhost:3000 with hot reloading.
+Runs the development server at http://localhost:3003 with hot reloading.
 
 ### Building and Testing
 ```bash
 npm run build    # Creates production build in build/ folder
-npm test         # Runs Jest test suite in watch mode
+npm test         # Runs Jest test suite in interactive watch mode
 ```
 
 ### Project Structure
 ```
 mle-vs-map/
 ├── src/
-│   ├── components/          # React components
-│   │   ├── DataInput.tsx    # Coin flip input controls
-│   │   ├── MLESection.tsx   # MLE calculation and visualization
-│   │   ├── MAPSection.tsx   # MAP calculation with prior controls
-│   │   ├── PriorControls.tsx# Alpha/beta parameter sliders
-│   │   └── TugOfWarVisualization.tsx # Three-panel comparison view
-│   ├── utils/               # Mathematical functions
-│   │   ├── calculations.ts  # MLE/MAP calculations, data generation
-│   │   ├── distributions.ts # Beta PDF, binomial likelihood functions
-│   │   └── chartHelpers.ts  # Recharts formatting utilities
-│   ├── types/
-│   │   └── index.ts        # TypeScript interfaces (AppState, Point)
-│   └── App.tsx             # Main component with state management
+│   ├── components/
+│   │   ├── InputControls.tsx     # Coin data and prior parameter inputs
+│   │   ├── LikelihoodChart.tsx   # Binomial likelihood visualization
+│   │   ├── PriorPosteriorChart.tsx # Beta distributions comparison
+│   │   ├── math-utils.ts         # Mathematical functions and interfaces
+│   │   ├── figma/               # Figma export components
+│   │   └── ui/                  # shadcn/ui component library
+│   ├── styles/
+│   │   └── globals.css          # Global Tailwind CSS styles
+│   ├── App.tsx                  # Main application component
+│   └── index.tsx                # React app entry point
 ```
 
 ## Architecture Details
 
 ### State Management
-- Single centralized state in `App.tsx` using `useState`
-- State includes: heads, tails, alpha, beta, and computed distributions
-- Derived values (MLE/MAP estimates, chart data) recalculated via `useEffect`
-- Props passed down to child components, callbacks passed up for updates
+- Centralized state in `App.tsx` using React `useState`
+- Two main state objects: `CoinData` (heads, tails) and `BetaParams` (alpha, beta)
+- Real-time calculations triggered by state changes
+- Props drilling pattern for state distribution to child components
 
 ### Mathematical Implementation
-- **MLE**: `heads / (heads + tails)` - pure data-driven estimation
-- **MAP**: `(heads + alpha - 1) / (total + alpha + beta - 2)` - incorporates Beta prior
-- **Distributions**: Beta PDF for prior/posterior, binomial likelihood for data
-- **Chart Data**: 100-point arrays generated for smooth curve visualization
+- **MLE Calculation**: `heads / (heads + tails)` - maximum likelihood estimate
+- **MAP Calculation**: Uses Beta-Binomial conjugacy for posterior mode
+- **Beta Distribution**: PDF calculations with gamma function approximations
+- **Binomial Likelihood**: Probability calculations for observed coin flip data
+- All mathematical functions located in `components/math-utils.ts`
 
 ### Key Dependencies
-- **React 19** with TypeScript for UI components
-- **Recharts** for all data visualization (LineChart, ScatterChart)
-- **Tailwind CSS** for styling with responsive design
-- **Create React App** for build tooling and development server
+- **React 19** with TypeScript and Create React App
+- **Recharts** for statistical data visualization (LineChart, ScatterChart)
+- **shadcn/ui** component library built on Radix UI primitives
+- **Tailwind CSS** for utility-first styling
+- **Radix UI** for accessible component primitives (dialogs, inputs, sliders, etc.)
 
 ### Component Architecture
-- `App.tsx`: Central state management and layout
-- `DataInput`: Coin flip controls with validation
-- `MLESection`: Pure likelihood-based estimation display
-- `MAPSection`: Prior-incorporated estimation with controls
-- `TugOfWarVisualization`: Three-panel comparative view (prior/likelihood/posterior)
+- `App.tsx`: Main container with state management and layout
+- `InputControls`: Sticky header with coin data inputs and prior parameter controls
+- `LikelihoodChart`: Visualizes binomial likelihood function
+- `PriorPosteriorChart`: Compares prior belief vs posterior distribution
+- `ui/`: Reusable shadcn/ui components (Input, Label, Button, etc.)
 
-### Styling Approach
-- Tailwind CSS utility classes throughout
-- Mobile-first responsive design
-- Color scheme: Blue (prior), Red (likelihood), Purple (posterior)
-- Component-level styling in individual TSX files
-
-### Development Notes
-- TypeScript strict mode enabled
-- All mathematical functions have proper type annotations
-- Chart data normalized for consistent visualization scaling
-- Real-time updates when sliders or inputs change
+### Styling System
+- Tailwind CSS with shadcn/ui design tokens
+- CSS custom properties for theme variables in `globals.css`
+- Responsive design with mobile-first approach
+- Consistent spacing and typography scales

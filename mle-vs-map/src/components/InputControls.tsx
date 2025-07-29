@@ -45,30 +45,30 @@ export function InputControls({
         <div className="flex items-center gap-4">
           <span className="text-sm font-medium text-muted-foreground">Coin Data:</span>
           <div className="flex items-center gap-2">
-            <Label htmlFor="heads" className="text-sm">Heads</Label>
+            <Label htmlFor="heads" className="text-sm text-red-600 font-semibold">Heads</Label>
             <Input
               id="heads"
               type="number"
               min="0"
               value={coinData.heads}
               onChange={handleHeadsChange}
-              className="w-16 h-8 text-sm"
+              className="w-16 h-8 text-sm text-red-600 font-semibold"
             />
           </div>
           <div className="flex items-center gap-2">
-            <Label htmlFor="tails" className="text-sm">Tails</Label>
+            <Label htmlFor="tails" className="text-sm text-blue-600 font-semibold">Tails</Label>
             <Input
               id="tails"
               type="number"
               min="0"
               value={coinData.tails}
               onChange={handleTailsChange}
-              className="w-16 h-8 text-sm"
+              className="w-16 h-8 text-sm text-blue-600 font-semibold"
             />
           </div>
           {total > 0 && (
             <div className="text-xs text-muted-foreground">
-              ({total} flips, {(coinData.heads / total).toFixed(3)} heads)
+              ({total} flips, <span className="text-red-600 font-semibold">{(coinData.heads / total).toFixed(3)}</span> heads)
             </div>
           )}
         </div>
@@ -80,7 +80,7 @@ export function InputControls({
         <div className="flex items-center gap-4">
           <span className="text-sm font-medium text-muted-foreground">Prior:</span>
           <div className="flex items-center gap-2">
-            <Label htmlFor="alpha" className="text-sm">α</Label>
+            <Label htmlFor="alpha" className="text-sm text-orange-500 font-semibold">α</Label>
             <Input
               id="alpha"
               type="number"
@@ -88,11 +88,11 @@ export function InputControls({
               step="1"
               value={priorParams.alpha}
               onChange={handleAlphaChange}
-              className="w-16 h-8 text-sm"
+              className="w-16 h-8 text-sm text-orange-500 font-semibold"
             />
           </div>
           <div className="flex items-center gap-2">
-            <Label htmlFor="beta" className="text-sm">β</Label>
+            <Label htmlFor="beta" className="text-sm text-green-600 font-semibold">β</Label>
             <Input
               id="beta"
               type="number"
@@ -100,12 +100,12 @@ export function InputControls({
               step="1"
               value={priorParams.beta}
               onChange={handleBetaChange}
-              className="w-16 h-8 text-sm"
+              className="w-16 h-8 text-sm text-green-600 font-semibold"
             />
           </div>
           <div className="text-xs text-muted-foreground">
             (mean: {(priorParams.alpha / (priorParams.alpha + priorParams.beta)).toFixed(3)}, 
-             strength: {(priorParams.alpha + priorParams.beta)})
+             strength: <span className="text-orange-500 font-semibold">{priorParams.alpha}</span> + <span className="text-green-600 font-semibold">{priorParams.beta}</span> = {(priorParams.alpha + priorParams.beta)})
           </div>
         </div>
       </div>
