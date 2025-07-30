@@ -1,0 +1,13 @@
+{
+  "files": {
+    "main.css": "/MLE-VS-MAP/static/css/main.97169dc5.css",
+    "main.js": "/MLE-VS-MAP/static/js/main.143ed317.js",
+    "index.html": "/MLE-VS-MAP/index.html",
+    "main.97169dc5.css.map": "/MLE-VS-MAP/static/css/main.97169dc5.css.map",
+    "main.143ed317.js.map": "/MLE-VS-MAP/static/js/main.143ed317.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.97169dc5.css",
+    "static/js/main.143ed317.js"
+  ]
+}
