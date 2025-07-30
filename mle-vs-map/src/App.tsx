@@ -15,8 +15,17 @@ export default function App() {
         <div className="mb-8 text-center">
           <h1 className="text-4xl mb-4">MLE vs MAP tug-of-war</h1>
           <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
-            Explore how Maximum Likelihood Estimation (MLE) and Maximum A Posteriori (MAP) estimation 
-            differ when analyzing coin flip data. See how prior beliefs influence your final estimate.
+            <span>
+              <a
+                href="https://github.com/xanderhnasko"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline hover:text-primary transition-colors"
+              >
+                Xander Hnasko
+              </a>
+              , July 2025
+            </span>
           </p>
         </div>
       </div>
