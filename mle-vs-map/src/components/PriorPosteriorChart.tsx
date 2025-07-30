@@ -1,6 +1,6 @@
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, ReferenceDot } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
-import { CoinData, BetaParams, betaPDF, binomialLikelihood, calculateMLE, calculateMAP, getPosteriorParams, generatePlotPoints, normalizeValues } from './math-utils';
+import { CoinData, BetaParams, betaPDF, binomialLikelihood, calculateMLE, calculateMAP, getPosteriorParams, generatePlotPoints, normalizeValues, getTugOfWarSizes } from './math-utils';
 
 interface PriorPosteriorChartProps {
   coinData: CoinData;
@@ -11,21 +11,8 @@ export function PriorPosteriorChart({ coinData, priorParams }: PriorPosteriorCha
   const total = coinData.heads + coinData.tails;
   const posteriorParams = getPosteriorParams(coinData, priorParams);
   
-  // Calculate strengths for dynamic sizing
-  const dataStrength = total; // Number of coin flips
-  const priorStrength = priorParams.alpha + priorParams.beta; // Prior pseudo-observations
-  
-  // Calculate relative sizes (normalize to reasonable range)
-  const maxStrength = Math.max(dataStrength, priorStrength);
-  const minSize = 0.7; // Minimum figure size
-  const maxSize = 1.5; // Maximum figure size
-  
-  const dataSize = maxStrength > 0 
-    ? minSize + (dataStrength / maxStrength) * (maxSize - minSize)
-    : minSize;
-  const priorSize = maxStrength > 0 
-    ? minSize + (priorStrength / maxStrength) * (maxSize - minSize) 
-    : minSize;
+  // Calculate dynamic sizes based on strength
+  const { dataSize, priorSize } = getTugOfWarSizes(coinData, priorParams);
   
   // Generate data points
   const thetaValues = generatePlotPoints(0.01, 0.99, 200);
@@ -72,83 +59,85 @@ export function PriorPosteriorChart({ coinData, priorParams }: PriorPosteriorCha
     density: normalizedPosterior[mapIndex]
   };
 
-  // Helper function to create a stick figure with dynamic sizing and muscularity
-  const createStickFigure = (cx: number, cy: number, size: number, color: string, faceRight: boolean, label: string) => {
-    const armX = faceRight ? cx + (12 * size) : cx - (12 * size);
+  // Enhanced tug-of-war figure creator with better visual appeal
+  const createTugOfWarFigure = (cx: number, cy: number, size: number, color: string, facingRight: boolean, label: string, strength: number) => {
+    // Visual parameters that scale with size and strength
+    const muscleThickness = Math.max(2, size * 2.2 + strength * 0.1);
+    const headRadius = 4 * size + strength * 0.05;
+    const armOffset = facingRight ? 15 * size : -15 * size;
+    const bodyWidth = 2 * size + strength * 0.02;
     
-    // Muscle thickness increases with size (for stronger figures)
-    const muscleThickness = Math.max(1.5, size * 1.8);
-    const baseThickness = 1.5;
+    // Stance gets wider with more strength (more stable)
+    const legSpread = 4 * size + strength * 0.08;
     
-    // Head size scales with overall size
-    const headRadius = 3 * size;
-    
-    // Body and limb scaling
-    const bodyLength = 14 * size;
-    const armLength = 6 * size;
-    const legLength = 6 * size;
+    // Lean angle - stronger figures lean more into the pull
+    const leanAngle = (strength * 0.5 + size * 2) * (facingRight ? 1 : -1);
     
     return (
       <g>
-        {/* Head */}
+        
+        {/* Head with expression */}
         <circle 
-          cx={cx} 
-          cy={cy - 25 * size} 
+          cx={cx + leanAngle * 0.3} 
+          cy={cy - 28 * size} 
           r={headRadius} 
           fill="none" 
           stroke={color} 
           strokeWidth={muscleThickness}
         />
         
-        {/* Body - thicker for stronger figures */}
+        
+        {/* Body - leaning with effort */}
         <line 
-          x1={cx} 
-          y1={cy - (22 * size)} 
-          x2={cx} 
+          x1={cx + leanAngle * 0.3} 
+          y1={cy - (24 * size)} 
+          x2={cx + leanAngle} 
           y2={cy - (8 * size)} 
           stroke={color} 
           strokeWidth={muscleThickness}
         />
         
-        {/* Arms - muscular appearance */}
+        {/* Arms - pulling hard */}
         <line 
-          x1={cx} 
-          y1={cy - (19 * size)} 
-          x2={armX} 
-          y2={cy - (22 * size)} 
+          x1={cx + leanAngle * 0.3} 
+          y1={cy - (20 * size)} 
+          x2={cx + armOffset + leanAngle * 0.7} 
+          y2={cy - (18 * size)} 
           stroke={color} 
           strokeWidth={muscleThickness}
         />
         
-        {/* Legs - thicker for stronger figures */}
+        {/* Legs - wide stance for stability */}
         <line 
-          x1={cx} 
+          x1={cx + leanAngle} 
           y1={cy - (8 * size)} 
-          x2={cx - (3 * size)} 
+          x2={cx - legSpread + leanAngle * 0.5} 
           y2={cy - (2 * size)} 
           stroke={color} 
           strokeWidth={muscleThickness}
         />
         <line 
-          x1={cx} 
+          x1={cx + leanAngle} 
           y1={cy - (8 * size)} 
-          x2={cx + (3 * size)} 
+          x2={cx + legSpread + leanAngle * 0.5} 
           y2={cy - (2 * size)} 
           stroke={color} 
           strokeWidth={muscleThickness}
         />
         
-        {/* Label */}
+        
+        {/* Label with dynamic positioning */}
         <text 
           x={cx} 
-          y={cy - (32 * size)} 
+          y={cy - (36 * size)} 
           textAnchor="middle" 
-          fontSize={10 * size} 
+          fontSize={Math.min(12, 8 + size * 2)} 
           fill={color} 
           fontWeight="bold"
         >
           {label}
         </text>
+        
       </g>
     );
   };
@@ -208,11 +197,11 @@ export function PriorPosteriorChart({ coinData, priorParams }: PriorPosteriorCha
           </div>
         </div>
 
-        <div className="h-[600px]" style={{ outline: 'none' }} tabIndex={-1}>
+        <div className="h-[700px]" style={{ outline: 'none' }} tabIndex={-1}>
           <ResponsiveContainer width="100%" height="100%">
             <LineChart 
               data={chartData}
-              margin={{ top: 20, right: 40, left: 40, bottom: 80 }}
+              margin={{ top: 80, right: 40, left: 40, bottom: 80 }}
               style={{ outline: 'none' }}
             >
               <XAxis 
@@ -267,126 +256,144 @@ export function PriorPosteriorChart({ coinData, priorParams }: PriorPosteriorCha
                 name="Posterior"
               />
               
-              
-              
-              
-              {/* Custom figure shapes using ReferenceDot */}
-              
-              
-              {/* Prior stick figure */}
-              <ReferenceDot 
-                x={priorPeak.theta} 
-                y={priorPeak.density}
-                shape={(props: any) => {
-                  const { cx, cy } = props;
-                  // Determine direction: if prior is to the left of MLE, face right; otherwise face left
-                  const faceRight = mle !== null && mlePeak ? priorPeak.theta < mlePeak.theta : true;
-                  
-                  return createStickFigure(
-                    cx, 
-                    cy, 
-                    priorSize, 
-                    "#3b82f6", 
-                    faceRight, 
-                    `Prior = ${priorPeak.theta.toFixed(3)}`
-                  );
-                }}
-              />
-              
-              {/* MLE stick figure with rope */}
+              {/* Enhanced Tug-of-War Visualization */}
               {mle !== null && mlePeak && (
-                <ReferenceDot 
-                  x={mlePeak.theta} 
-                  y={mlePeak.density}
-                  shape={(props: any) => {
-                    const { cx, cy } = props;
-                    // Face opposite direction from prior for tug-of-war
-                    const faceRight = mlePeak.theta < priorPeak.theta; // Face toward prior
-                    
-                    return (
-                      <g>
-                        {/* Rope to Prior figure (drawn first, behind MLE figure) */}
-                        {(() => {
-                          // Calculate Prior position using coordinate transformation from MLE position
-                          const deltaTheta = priorPeak.theta - mlePeak.theta;
-                          const deltaDensity = priorPeak.density - mlePeak.density;
-                          
-                          // Use chart dimensions from the margins
-                          const plotWidth = 720; // 800 - 40 - 40  
-                          const plotHeight = 500; // 600 - 20 - 80
-                          
-                          const priorScreenX = cx + (deltaTheta * plotWidth);
-                          const priorScreenY = cy + (deltaDensity * -plotHeight);
-                          
-                          // Calculate hand positions
-                          const mleHandX = cx + (faceRight ? 12 * dataSize : -12 * dataSize);
-                          const mleHandY = cy - (25 * dataSize);
-                          
-                          const priorFaceRight = priorPeak.theta < mlePeak.theta;
-                          const priorHandX = priorScreenX + (priorFaceRight ? 12 * priorSize : -12 * priorSize);
-                          const priorHandY = priorScreenY - (25 * priorSize);
-                          
-                          return (
-                            <line
-                              x1={mleHandX}
-                              y1={mleHandY}
-                              x2={priorHandX}
-                              y2={priorHandY}
-                              stroke="#8B4513"
-                              strokeWidth={Math.max(3, (priorSize + dataSize) * 1.5)}
-                              strokeLinecap="round"
-                            />
-                          );
-                        })()}
-                        
-                        {/* MLE stick figure */}
-                        {createStickFigure(
-                          cx, 
-                          cy, 
-                          dataSize, 
-                          "#ef4444", 
-                          faceRight, 
-                          `MLE = ${mle.toFixed(3)}`
-                        )}
-                      </g>
-                    );
-                  }}
-                />
-              )}
-              
-              
-              {/* Green dash at MAP position on rope */}
-              {mle !== null && mlePeak && (() => {
-                // Calculate rope height at MAP position (same as before)
-                const mapX = mapPeak.theta;
-                const priorX = priorPeak.theta;
-                const dataX = mlePeak.theta;
-                const priorY = priorPeak.density + (25 * priorSize) / 500;
-                const dataY = mlePeak.density + (25 * dataSize) / 500;
-                const t = (mapX - priorX) / (dataX - priorX);
-                const ropeYAtMap = priorY + t * (dataY - priorY);
-                
-                return (
-                  <ReferenceDot
-                    x={mapX}
-                    y={ropeYAtMap}
+                <>
+                  {/* Prior figure */}
+                  <ReferenceDot 
+                    x={priorPeak.theta} 
+                    y={priorPeak.density}
                     shape={(props: any) => {
                       const { cx, cy } = props;
-                      return (
-                        <line
-                          x1={cx}
-                          y1={cy}
-                          x2={cx}
-                          y2={cy + 15} // Hang down 15 pixels
-                          stroke="#22c55e"
-                          strokeWidth={4}
-                          strokeLinecap="round"
-                        />
+                      const priorStrength = priorParams.alpha + priorParams.beta;
+                      const facingRight = priorPeak.theta < mlePeak.theta;
+                      
+                      return createTugOfWarFigure(
+                        cx, 
+                        cy, 
+                        priorSize, 
+                        "#3b82f6", 
+                        facingRight, 
+                        `Prior`, 
+                        priorStrength
                       );
                     }}
                   />
-                );
-              })()}
+                  
+                  {/* Data/Likelihood figure */}
+                  <ReferenceDot 
+                    x={mlePeak.theta} 
+                    y={mlePeak.density}
+                    shape={(props: any) => {
+                      const { cx, cy } = props;
+                      const dataStrength = coinData.heads + coinData.tails;
+                      const facingRight = mlePeak.theta < priorPeak.theta;
+                      
+                      return createTugOfWarFigure(
+                        cx, 
+                        cy, 
+                        dataSize, 
+                        "#ef4444", 
+                        facingRight, 
+                        `Data`, 
+                        dataStrength
+                      );
+                    }}
+                  />
+                  
+                  {/* Dynamic Rope with proper alignment */}
+                  <ReferenceDot 
+                    x={(priorPeak.theta + mlePeak.theta) / 2} 
+                    y={(priorPeak.density + mlePeak.density) / 2}
+                    shape={(props: any) => {
+                      // Use Recharts coordinate transformation
+                      const xScale = props.cx / ((priorPeak.theta + mlePeak.theta) / 2);
+                      const yScale = props.cy / ((priorPeak.density + mlePeak.density) / 2);
+                      
+                      const priorX = priorPeak.theta * xScale;
+                      const priorY = priorPeak.density * yScale;
+                      const dataX = mlePeak.theta * xScale;
+                      const dataY = mlePeak.density * yScale;
+                      
+                      // Hand positions based on figure orientation
+                      const priorFacingRight = priorPeak.theta < mlePeak.theta;
+                      const dataFacingRight = mlePeak.theta < priorPeak.theta;
+                      
+                      const priorHandX = priorX + (priorFacingRight ? 15 * priorSize : -15 * priorSize);
+                      const priorHandY = priorY - (18 * priorSize);
+                      const dataHandX = dataX + (dataFacingRight ? 15 * dataSize : -15 * dataSize);
+                      const dataHandY = dataY - (18 * dataSize);
+                      
+                      // Constant rope thickness
+                      const ropeThickness = 6;
+                      
+                      return (
+                        <g>
+                          {/* Main rope */}
+                          <line
+                            x1={priorHandX}
+                            y1={priorHandY}
+                            x2={dataHandX}
+                            y2={dataHandY}
+                            stroke="#8B4513"
+                            strokeWidth={ropeThickness}
+                            strokeLinecap="round"
+                          />
+                          
+                          {/* Rope texture lines */}
+                          <line
+                            x1={priorHandX + (dataHandX - priorHandX) * 0.2}
+                            y1={priorHandY + (dataHandY - priorHandY) * 0.2}
+                            x2={priorHandX + (dataHandX - priorHandX) * 0.8}
+                            y2={priorHandY + (dataHandY - priorHandY) * 0.8}
+                            stroke="#654321"
+                            strokeWidth={1}
+                            opacity={0.6}
+                          />
+                        </g>
+                      );
+                    }}
+                  />
+                  
+                  {/* MAP position - green dash on rope */}
+                  <ReferenceDot
+                    x={map}
+                    y={(priorPeak.density + mlePeak.density) / 2}
+                    shape={(props: any) => {
+                      const { cx } = props;
+                      
+                      // Calculate exact position on rope line
+                      const t = (map - priorPeak.theta) / (mlePeak.theta - priorPeak.theta);
+                      const xScale = props.cx / ((priorPeak.theta + mlePeak.theta) / 2);
+                      const yScale = props.cy / ((priorPeak.density + mlePeak.density) / 2);
+                      
+                      const priorY = priorPeak.density * yScale;
+                      const dataY = mlePeak.density * yScale;
+                      
+                      const priorHandY = priorY - (18 * priorSize);
+                      const dataHandY = dataY - (18 * dataSize);
+                      
+                      // Calculate MAP position on the rope line
+                      const mapRopeY = priorHandY + t * (dataHandY - priorHandY);
+                      
+                      return (
+                        <g>
+                          {/* Simple vertical green dash on rope */}
+                          <line
+                            x1={cx}
+                            y1={mapRopeY - 8}
+                            x2={cx}
+                            y2={mapRopeY + 8}
+                            stroke="#22c55e"
+                            strokeWidth={4}
+                            strokeLinecap="round"
+                          />
+                        </g>
+                      );
+                    }}
+                  />
+                </>
+              )}
               
               {/* MAP position marker */}
               <ReferenceDot 

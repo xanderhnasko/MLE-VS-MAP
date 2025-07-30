@@ -97,3 +97,29 @@ export function normalizeValues(values: number[]): number[] {
   if (max === 0) return values;
   return values.map(v => v / max);
 }
+
+// Calculate "strength" of data for tug-of-war visualization
+export function calculateDataStrength(data: CoinData): number {
+  return data.heads + data.tails;
+}
+
+// Calculate "strength" of prior for tug-of-war visualization
+export function calculatePriorStrength(prior: BetaParams): number {
+  // Sum of alpha and beta represents pseudo-observations
+  return prior.alpha + prior.beta;
+}
+
+// Get relative sizes for tug-of-war figures based on strength
+export function getTugOfWarSizes(data: CoinData, prior: BetaParams): { dataSize: number; priorSize: number } {
+  const dataStrength = calculateDataStrength(data);
+  const priorStrength = calculatePriorStrength(prior);
+  
+  const maxStrength = Math.max(dataStrength, priorStrength, 1); // Avoid division by zero
+  const minSize = 0.6; // Minimum figure size
+  const maxSize = 1.8; // Maximum figure size
+  
+  const dataSize = minSize + (dataStrength / maxStrength) * (maxSize - minSize);
+  const priorSize = minSize + (priorStrength / maxStrength) * (maxSize - minSize);
+  
+  return { dataSize, priorSize };
+}
